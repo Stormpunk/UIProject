@@ -1,64 +1,82 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MenuHandler : MonoBehaviour
 {
-    bool akmIsActive;
-    //Lets me turn off the Any Key Panel upon a button press
-    public GameObject AnyKeyPanel;
-    //the any key panel
-    public GameObject MainMenu;
-    //the Main Menu, a doy
     AsyncOperation loadingOperation;
-    //loads the scene in the background, actually letting me use the loading screen for like... 0.3 of a second yay!
+    public GameObject anyKeyScreen;
+    public bool anyKeyActive;
     public Slider progressBar;
-
-    private void Start()
+    public Slider volumeSlider;
+    public AudioMixer audioMixer;
+    public AudioSource audioSource;
+    Resolution[] resolutions;
+    public Dropdown resolutionDropdown;
+    // Start is called before the first frame update
+    void Start()
     {
-        //AnyKeyPanel = GameObject.Find("AnyKeyPanel");
-        akmIsActive = true;
-        //No matter what, when the game starts, the Any Key Menu will be the active one
-        //MainMenu = GameObject.Find("MainMenuPanel");
-    }
-
-    private void Update()
-    {
-        if (akmIsActive = true && Input.anyKey)
+        resolutions = Screen.resolutions;
+        resolutionDropdown.ClearOptions();
+        List<string> options = new List<string>();
+        int currentResolutionIndex = 0;
+        for (int i = 0; i < resolutions.Length; i++)
         {
-            AKMtoMain();
-            //Triggers the function that goes from the Any Key Menu to the main menu
+            string option = resolutions[i].width + "x" + resolutions[i].height;
+            options.Add(option);
+            if (resolutions[i].width == Screen.currentResolution.width && resolutions[i].height == Screen.currentResolution.height)
+            {
+                currentResolutionIndex = i;
+            }
         }
+        resolutionDropdown.AddOptions(options);
+        resolutionDropdown.value = currentResolutionIndex;
+        resolutionDropdown.RefreshShownValue();
+
     }
 
-    public void LoadScene()
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+    public void LoadNext()
     {
         loadingOperation = SceneManager.LoadSceneAsync(1);
-        Debug.Log("Game is Play");
+        Debug.Log("GameIsPlay");
         progressBar.value = Mathf.Clamp01(loadingOperation.progress / 0.9f);
-        //loads the game and starts affecting the load screen slider    
     }
-    public void QuitGame()
+    public void SetResolution(int resolutionIndex)
     {
+        Resolution resolution = resolutions[resolutionIndex];
+        Screen.SetResolution(resolution.width, resolution.height, Screen.fullScreen);
+    }
+    public void ExitZeGame()
+    {
+        Debug.Log("Quitting Game");
         Application.Quit();
-        Debug.Log("Game is Quit");
-        //quits the game
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
-        //quits the game in the Unity Editor, actually letting me check if this damn thing works
 #endif
     }
-    public void FullscreenToggle()
+    public void SetVolume(float volume)
     {
-        Screen.fullScreen = !Screen.fullScreen;
-        //toggles the fullscreen
+        audioMixer.SetFloat("masterAudio", Mathf.Log10 (volume) *20) ;
     }
-        void AKMtoMain()
-        {
-            AnyKeyPanel.SetActive(false);
-            MainMenu.SetActive(true);
-            akmIsActive = false;
-        }
+    public void Mute()
+    {
+        audioSource.mute = !audioSource.mute;
+    }
+    public void SetQuality(int QualityIndex)
+    {
+        QualitySettings.SetQualityLevel(QualityIndex);
+    }
+    public void SetFullscreen(bool isFullscreen)
+    {
+        Screen.fullScreen = isFullscreen;
+        Debug.Log("Toggling Fullscreen");
+    }
 }
